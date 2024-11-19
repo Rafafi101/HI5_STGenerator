@@ -48,6 +48,8 @@ if (isset($_POST['submitTraining'])) {
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+    <link rel="stylesheet" href="./static/css/chatbot.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
     <!--<link rel="stylesheet" href="./Bootstrap/css/bootstrap.min.css">-->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"></script>
@@ -267,7 +269,7 @@ if (isset($_POST['submitTraining'])) {
         <form method="post">
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item">
-                    <button type="submit" class="btn btn-danger1" style="color: #ffffff;" name="logout">Logout</button>
+                    <!-- <button type="submit" class="btn btn-danger1" style="color: #ffffff;" name="logout">Logout</button> -->
                 </li>
             </ul>
         </form>
@@ -306,7 +308,7 @@ if (isset($_POST['submitTraining'])) {
             <div class="form-row">
               <div class="form-group col-md-6">
                 <label for="skillschosenDropdown">Input Skill Name</label>
-                <input type="text" id="skill_chosen" class="form-control" name="skill_chosen" id="skill_chosen">
+                <input type="text" id="skill_chosen" class="form-control" name="skill_chosen" id="skill_chosen" required>
               </div>
               <div class="form-group col-md-6">
                 <label for="proficiencychosenDropdown">Select Proficiency</label>
@@ -327,24 +329,24 @@ if (isset($_POST['submitTraining'])) {
               <br>
               <br>
               <label for="trainingName">Training Name</label>
-              <input type="text" class="form-control" id="trainingName" name="training_name">
+              <input type="text" class="form-control" id="trainingName" name="training_name" required>
             </div>
 
             <div class="form-group">
               <label for="description">Description</label>
-              <textarea class="form-control auto-resize" id="description" name="description"></textarea>
+              <textarea class="form-control auto-resize" id="description" name="description" required></textarea>
             </div>
 
             <div class="form-group">
               <label for="syllabus">Syllabus</label>
-              <textarea class="form-control auto-resize" id="syllabus" name="syllabus"></textarea>
+              <textarea class="form-control auto-resize" id="syllabus" name="syllabus" required></textarea>
             </div>
 
             <div class="form-row">
               <div class="form-group col-md-6">
                 <label for="startDate">Start Date</label>
                 <div class="input-group">
-                  <input type="text" class="form-control datepicker" id="startDate" name="start_date" readonly>
+                  <input type="text" class="form-control datepicker" id="startDate" name="start_date" required>
                   <div class="input-group-append">
                     <span class="input-group-text">
                       <i class="fas fa-calendar-alt"></i>
@@ -355,7 +357,7 @@ if (isset($_POST['submitTraining'])) {
               <div class="form-group col-md-6">
                 <label for="endDate">End Date</label>
                 <div class="input-group">
-                  <input type="text" class="form-control datepicker" id="endDate" name="end_date" readonly>
+                  <input type="text" class="form-control datepicker" id="endDate" name="end_date" required>
                   <div class="input-group-append">
                     <span class="input-group-text">
                       <i class="fas fa-calendar-alt"></i>
@@ -533,17 +535,14 @@ function toggleDropdown(event) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    var jobNameInput = document.getElementById('job_name');
-    var generateJobBtn = document.getElementById('generateJobBtn');
-    var generateinterviewBtn = document.getElementById('generate_interview');
+    var jobNameInput = document.getElementById('skill_chosen');
+    var generateSyllabusBtn = document.getElementById('generate_syllabus');
 
     function toggleButton() {
         if (jobNameInput.value.trim() === '') {
-            generateJobBtn.disabled = true;
-            generateinterviewBtn.disabled = true;
+            generateSyllabusBtn.disabled = true;
         } else {
-            generateJobBtn.disabled = false;
-            generateinterviewBtn.disabled = false;
+            generateSyllabusBtn.disabled = false;
         }
     }
 

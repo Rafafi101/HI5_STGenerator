@@ -122,6 +122,54 @@ def remove_asterisks(text):
     """Removes asterisks from the given text."""
     return text.replace("** ", "")
 
+@app.route('/waiz_chat', methods=['POST'])
+def waiz_chat():
+    data = request.json
+    prompt = data.get('prompt')
+    conversation = data.get('conversation')
+
+    # Append the user's prompt to the conversation
+    conversation.append({
+        "role": "user",
+        "content": prompt
+    })
+
+    for message in conversation:
+        print(f"Role: {message['role']}, Content: {message['content']}")
+
+    # Generate response using the LLM
+    completion = client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=conversation,
+        temperature=1,
+        max_tokens=1024,
+        top_p=1,
+        stream=True,
+        stop=None,
+    )
+
+    # Collect the generated response
+    generated_text = ""
+    for chunk in completion:
+        generated_text += chunk.choices[0].delta.content or ""
+
+    print(generated_text)
+
+    # Append the assistant's response to the conversation
+    conversation.append({
+        "role": "assistant",
+        "content": generated_text
+    })
+
+    # Process the response to remove asterisks and extract the task
+    task = remove_asterisk(generated_text)
+
+    # Return the updated conversation and task as JSON
+    return jsonify({
+        "task": task,
+        "conversation": conversation
+    })
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
