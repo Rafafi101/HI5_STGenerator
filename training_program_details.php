@@ -7,22 +7,6 @@ use GuzzleHttp\Client;
 $training_id = $_SESSION['training_id'];
 // echo "<script type='text/javascript'>alert('Training ID: $training_id');</script>";
 
-function generateSyllabus($skill_name, $proficiency) {
-  $client = new Client();
-  $response = $client->post('http://127.0.0.1:5000/generate_syllabus', [
-    'json' => ['skill_name' => $skill_name, 'proficiency' => $proficiency]
-  ]);
-
-  if ($response->getStatusCode() != 200) {
-    return false;
-  }
-
-  $body = $response->getBody();
-  $data = json_decode($body, true);
-
-  return $data;
-}
-
 if (isset($_POST['editTraining'])) {
   $skill = $_POST['skill_chosen'];
   $progprof = $_POST['proficiency_chosen'];
@@ -105,6 +89,9 @@ $proficiency_chosen = isset($_POST['hidden_proficiency_chosen']) ? $_POST['hidde
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+  <link rel="stylesheet" href="./static/css/chatbot.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
+  <script src="./static/js/chatbot.js" defer></script>
   <!--<link rel="stylesheet" href="./Bootstrap/css/bootstrap.min.css">-->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"></script>
@@ -326,7 +313,7 @@ $proficiency_chosen = isset($_POST['hidden_proficiency_chosen']) ? $_POST['hidde
       <form method="post">
         <ul class="navbar-nav ml-auto">
           <li class="nav-item">
-            <button type="submit" class="btn btn-danger1" style="color: #ffffff;" name="logout">Logout</button>
+            <!-- <button type="submit" class="btn btn-danger1" style="color: #ffffff;" name="logout">Logout</button> -->
           </li>
         </ul>
       </form>
@@ -361,12 +348,12 @@ $proficiency_chosen = isset($_POST['hidden_proficiency_chosen']) ? $_POST['hidde
         <div class="container mx-auto">
           <h2 class="fs-5">Add Training Program</h2>
           <form id="trainingForm" method="post">
-            <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
+            <input type="hidden" name="syllabus" value="<?php echo $user_id; ?>">
 
             <div class="form-row">
               <div class="form-group col-md-6">
                 <label for="skillschosenDropdown">Input Skill Name</label>
-                <input type="text" id="skill_chosen" class="form-control" name="skill_chosen" id="skill_chosen" value="<?php echo $training['skill_name']; ?>">
+                <input type="text" id="skill_chosen" class="form-control" name="skill_chosen" id="skill_chosen" value="<?php echo $training['skill_name']; ?>" required>
               </div>
               <div class="form-group col-md-6">
                 <label for="proficiencychosenDropdown">Select Proficiency</label>
@@ -387,24 +374,24 @@ $proficiency_chosen = isset($_POST['hidden_proficiency_chosen']) ? $_POST['hidde
               <br>
               <br>
               <label for="trainingName">Training Name</label>
-              <input type="text" class="form-control" id="trainingName" name="training_name" value="<?php echo $training['training_name']; ?>">
+              <input type="text" class="form-control" id="trainingName" name="training_name" value="<?php echo $training['training_name']; ?>" required>
             </div>
 
             <div class="form-group">
               <label for="description">Description</label>
-              <textarea class="form-control auto-resize" id="description" name="description"><?php echo $training['description']; ?></textarea>
+              <textarea class="form-control auto-resize" id="description" name="description" required><?php echo $training['description']; ?></textarea>
             </div>
 
             <div class="form-group">
               <label for="syllabus">Syllabus</label>
-              <textarea class="form-control auto-resize" id="syllabus" name="syllabus"><?php echo $training['syllabus']; ?></textarea>
+              <textarea class="form-control auto-resize" id="syllabus" name="syllabus" required><?php echo $training['syllabus']; ?></textarea>
             </div>
 
             <div class="form-row">
               <div class="form-group col-md-6">
                 <label for="startDate">Start Date</label>
                 <div class="input-group">
-                  <input type="text" class="form-control datepicker" id="startDate" name="start_date" value="<?php echo htmlspecialchars($training['start_date']); ?>" readonly>
+                  <input type="text" class="form-control datepicker" id="startDate" name="start_date" value="<?php echo htmlspecialchars($training['start_date']); ?>" required>
                   <div class="input-group-append">
                     <span class="input-group-text">
                       <i class="fas fa-calendar-alt"></i>
@@ -415,7 +402,7 @@ $proficiency_chosen = isset($_POST['hidden_proficiency_chosen']) ? $_POST['hidde
               <div class="form-group col-md-6">
                 <label for="endDate">End Date</label>
                 <div class="input-group">
-                  <input type="text" class="form-control datepicker" id="endDate" name="end_date" value="<?php echo htmlspecialchars($training['end_date']); ?>"readonly>
+                  <input type="text" class="form-control datepicker" id="endDate" name="end_date" value="<?php echo htmlspecialchars($training['end_date']); ?>" required>
                   <div class="input-group-append">
                     <span class="input-group-text">
                       <i class="fas fa-calendar-alt"></i>
@@ -445,306 +432,194 @@ $proficiency_chosen = isset($_POST['hidden_proficiency_chosen']) ? $_POST['hidde
     </div>
   </div>
 
+  <!-- Loading modal -->
+  <div class="modal" id="loadingModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body text-center">
+          <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <p>Loading, please wait...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chatbot Integration -->
+  <button class="chatbot-toggler">
+      <span class="material-symbols-outlined">mode_comment</span>
+      <span class="material-symbols-outlined">close</span>
+  </button>
+  <div class="chatbot">
+      <header>
+          <h2>Chatbot</h2>
+          <span class="close-btn material-symbols-outlined">close</span>
+      </header>
+      <ul class="chatbox">
+          <li class="chat incoming">
+              <span class="material-symbols-outlined">smart_toy</span>
+              <p>Hi there! <br> How can I help you today?</p>
+          </li>
+      </ul>
+      <div class="chat-input">
+          <textarea placeholder="Enter a message..."></textarea>
+          <span id="send-btn" class="material-symbols-outlined">send</span>
+      </div>
+  </div>
+
   <script>
-  $(document).ready(function() {
-    var filters = <?php echo json_encode(isset($filters) ? $filters : []); ?>;
-    var attendees = <?php echo json_encode(isset($attendees) ? $attendees : []); ?>;
+        $(document).ready(function() {
 
-    // Function to update the attendees container
-    // Function to update the attendees container
-    function updateAttendeesContainer() {
-      $('#attendees-container').empty();
-      // Use a Set to track unique employee names
-      var uniqueAttendees = new Set();
+            $('#generate_syllabus').click(function() {
+              event.preventDefault(); // Prevent form submission
+              var job_Name = $('#skill_chosen').val();
+              var proficiency = $('#proficiency').val();
+              // alert("Skills name: " + job_Name + "\n proficiency:" + proficiency);
+                $('#loadingModal').modal('show');
 
-      // Filter attendees to remove duplicates
-      var filteredAttendees = attendees.filter(function(attendee) {
-        if (uniqueAttendees.has(attendee.employee_name)) {
-          return false; // Duplicate, don't include
-        } else {
-          uniqueAttendees.add(attendee.employee_name);
-          return true; // Not a duplicate, include
-        }
-      });
-
-      // Update the attendees array with the filtered list
-      attendees = filteredAttendees;
-
-      attendees.forEach(function(attendee, index) {
-        var tag = $('<div class="tag"></div>');
-        tag.text(attendee.employee_name);
-        var removeBtn = $('<span class="remove-tag">&times;</span>');
-        removeBtn.click(function() {
-          attendees.splice(index, 1);
-          updateAttendeesContainer();
-          $('#attendees-input').val(JSON.stringify(attendees)); // Update hidden input value
-        });
-        tag.append(removeBtn);
-        $('#attendees-container').append(tag);
-      });
-
-      // Update hidden input value with the attendees array
-      $('#attendees-input').val(JSON.stringify(attendees));
-    }
-
-
-    function updateSkillsContainer() {
-      $('#skills-container').empty();
-      filters.forEach(function(filter, index) {
-        var tag = $('<div class="tag"></div>');
-        tag.text(filter.skill_name + ' - ' + filter.proficiency_name);
-        var skillidd = filter.id;
-        var removeBtn = $('<span class="remove-tag">&times;</span>');
-        removeBtn.click(function() {
-          filters.splice(index, 1);
-          $('input[name="skill_ids[]"][value="' + index + '"]').remove();
-          updateSkillsContainer();
-          $('#filters-input').val(JSON.stringify(filters));
-        });
-        tag.append(removeBtn);
-        var hiddenInput = `<input type="hidden" name="skill_ids[]" value="${skillidd}">`;
-        $('#skills-container').append(tag);
-      });
-      $('#filters-input').val(JSON.stringify(filters)); // Update the hidden input
-    }
-
-    updateAttendeesContainer();
-    updateSkillsContainer();
-
-    $('#addSkillButton').click(function() {
-      var skillId = $('#skill_name').val();
-      var skillName = $('#skill_name option:selected').text();
-      var minimumProficiency = $('#proficiencyDropdown').val();
-      var minimumProficiencyText = $('#proficiencyDropdown option:selected').text();
-      var skillExists = false;
-      // Loop through the filters array to check for duplicates
-      filters.forEach(function(filter) {
-        if (filter.id.toString() === skillId.toString()) {
-          skillExists = true;
-          // Display an alert with both skill IDs
-          //alert('Duplicate Skill ID Found:\nExisting Skill ID: ' + filter.id + '\nNew Skill ID: ' + skillId);
-        }
-        //alert('Duplicate Skill ID Found:\nExisting Skill ID: ' + filter.id + '\nNew Skill ID: ' + skillId);
-      });
-
-      if (skillExists) {
-        alert('This skill has already been added.');
-        return; // Stop the function if the skill already exists
-      }
-      filters.push({ id: skillId, skill_name: skillName, proficiency_id: minimumProficiency, proficiency_name: minimumProficiencyText });
-      updateSkillsContainer();
-      $('#filters-input').val(JSON.stringify(filters)); // Update the hidden input
-    });
-
-    function showDropdownResults(container, data) {
-      container.empty();
-      if (data.length > 0) {
-        container.show();
-        data.forEach(function(item) {
-          var div = $('<div></div>');
-          div.text(item.employee_name);
-          div.click(function() {
-            // Set the display value to employee_name
-            container.siblings('input').val(item.employee_name);
-            // Store the user_id in the hidden field
-            $('#hidden_internal_trainer_id').val(item.user_id);
-            container.hide();
-          });
-          container.append(div);
-        });
-      } else {
-        container.hide();
-      }
-    }
-
-    function showDropdownResultsemployee(container, data) {
-      container.empty();
-      if (data.length > 0) {
-        container.show();
-        data.forEach(function(item) {
-          var div = $('<div></div>');
-          div.text(item.employee_name);
-          div.click(function() {
-            attendees.push({
-              employee_id: item.user_id,
-              employee_name: item.employee_name
-            });
-            updateAttendeesContainer();
-            $('#attendees-input').val(JSON.stringify(attendees));
-            container.hide();
-          });
-          container.append(div);
-        });
-      } else {
-        container.hide();
-      }
-    }
-
-    $('#employeeSearch').on('input', function() {
-      var searchTerm = $(this).val();
-      if (searchTerm.length > 2) {
-        $.ajax({
-          url: 'search_employees.php',
-          method: 'GET',
-          data: { term: searchTerm },
-          success: function(data) {
-            var employees = JSON.parse(data);
-            showDropdownResultsemployee($('#employeeResults'), employees);
-          }
-        });
-      } else {
-        $('#employeeResults').hide();
-      }
-    });
-
-    $('#trainerType').change(function() {
-      var trainerType = $(this).val();
-      if (trainerType === 'internal') {
-        $('#internalTrainerSection').show();
-        $('#externalTrainerSection').hide();
-      } else if (trainerType === 'external') {
-        $('#internalTrainerSection').hide();
-        $('#externalTrainerSection').show();
-      }
-    });
-
-    $('#internalTrainer').on('input', function() {
-      var searchTerm = $(this).val();
-      if (searchTerm.length > 2) {
-        $.ajax({
-          url: 'search_employees.php',
-          method: 'GET',
-          data: { term: searchTerm },
-          success: function(data) {
-            var employees = JSON.parse(data);
-            showDropdownResults($('#internalTrainerResults'), employees);
-          }
-        });
-      } else {
-        $('#internalTrainerResults').hide();
-      }
-    });
-
-    $('#attendeesExcel').change(function(e) {
-      var file = e.target.files[0];
-      var reader = new FileReader();
-      reader.onload = function(event) {
-        var data = new Uint8Array(event.target.result);
-        var workbook = XLSX.read(data, {type: 'array'});
-        var sheetName = workbook.SheetNames[0];
-        var sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {header: 1});
-
-        var usersTable = {}; // Object to store user data from the users table
-
-        // Fetch all users from the users table
-        $.ajax({
-          url: 'fetch_users.php', // Create a new PHP file to fetch users
-          method: 'GET',
-          dataType: 'json',
-          success: function(users) {
-            users.forEach(function(user) {
-              var fullName = user.first_name + ' ' + user.last_name;
-              usersTable[fullName] = user.user_id;
-            });
-
-            // Process the Excel data
-            sheet.forEach(function(row, index) {
-              if (index === 0) return; // Skip header row
-              var firstName = row[0];
-              var lastName = row[1];
-              var fullName = firstName + ' ' + lastName;
-
-              if (usersTable[fullName]) {
-                var userId = usersTable[fullName];
-                attendees.push({
-                  employee_id: userId,
-                  employee_name: fullName
+                $.ajax({
+                    url: 'http://127.0.0.1:5000/generate_syllabus',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                      skill_name: job_Name,
+                      proficiency: proficiency
+                    }),
+                    success: function(response) {
+                      $('#trainingName').val(response.training_name);
+                      $('#description').val(response.description);
+                      $('#syllabus').val(response.syllabus);
+                      autoResizeTextarea($('#description')[0]);
+                      autoResizeTextarea($('#syllabus')[0]);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    },
+                    complete: function() {
+                       // alert("pumasok");
+                        // Hide the loading modal when the request is complete
+                        $('#loadingModal').modal('hide');
+                    }
                 });
-                updateAttendeesContainer();
-                $('#attendees-input').val(JSON.stringify(attendees));
-              } else {
-                console.log(`User ${fullName} not found in the users table.`);
-              }
             });
 
-            $('#attendees-input').val(JSON.stringify(attendees));
-          },
-          error: function() {
-            console.log('Error fetching users from the database.');
-          }
+            // GENERATE INTERVIEW
+            $('#generate_interview').click(function() {
+              event.preventDefault(); // Prevent form submission
+                var jobName = $('#job_name').val();
+                $('#loadingModal').modal('show');
+
+                $.ajax({
+                    url: 'http://127.0.0.1:5000/generate_interview',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        job_name: jobName,
+                    }),
+                    success: function(response) {
+                        $('#interview').val(response.output);
+                        autoResizeTextarea($('#interview')[0]);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    },
+                    complete: function() {
+                        // Hide the loading modal when the request is complete
+                        $('#loadingModal').modal('hide');
+                    }
+                });
+            });
+
+
         });
-      };
-      reader.readAsArrayBuffer(file);
-    });
-
-
-
-    // Initial state setup
-    updateFiltersContainer();
-    updateAttendeesContainer();
-  });
-  </script>
+    </script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
   <script>
-  $(document).ready(function() {
-    // Initialize datepickers
-    $('.datepicker').datepicker({
-      format: 'yyyy-mm-dd',
-      autoclose: true,
-      todayHighlight: true
+    $(document).ready(function() {
+      // Initialize datepickers
+      $('.datepicker').datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+        todayHighlight: true
+      });
+
+      // Handle the display of internal/external trainer sections based on selection
+      $('#trainerType').change(function() {
+        var selectedType = $(this).val();
+        if (selectedType == 'internal') {
+          $('#internalTrainerSection').show();
+          $('#externalTrainerSection').hide();
+        } else if (selectedType == 'external') {
+          $('#internalTrainerSection').hide();
+          $('#externalTrainerSection').show();
+        }
+      });
     });
 
-    // Handle the display of internal/external trainer sections based on selection
-    $('#trainerType').change(function() {
-      var selectedType = $(this).val();
-      if (selectedType == 'internal') {
-        $('#internalTrainerSection').show();
-        $('#externalTrainerSection').hide();
-      } else if (selectedType == 'external') {
-        $('#internalTrainerSection').hide();
-        $('#externalTrainerSection').show();
-      }
-    });
-  });
 
-
-  document.getElementById('trainingForm').addEventListener('submit', function() {
+    document.getElementById('trainingForm').addEventListener('submit', function() {
     document.getElementById('hidden_skill_chosen').value = document.getElementById('skill_chosen').value;
     document.getElementById('hidden_proficiency_chosen').value = document.getElementById('proficiencychosenDropdown').value;
-  });
+});
 
-  const textareas = document.querySelectorAll('.auto-resize');
+const textareas = document.querySelectorAll('.auto-resize');
 
-  textareas.forEach(textarea => {
-    textarea.addEventListener('input', () => {
-      textarea.style.height = 'auto';
-      textarea.style.height = textarea.scrollHeight + 'px';
-    });
-
-    textarea.addEventListener('paste', () => {
-      setTimeout(() => {
-        textarea.style.height = 'auto';
-        textarea.style.height = textarea.scrollHeight + 'px';
-      }, 0);
-    });
-
-    // Adjust height on page load
+textareas.forEach(textarea => {
+  textarea.addEventListener('input', () => {
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';
   });
 
-  function toggleSidebar() {
+  textarea.addEventListener('paste', () => {
+    setTimeout(() => {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }, 0);
+  });
+
+  // Adjust height on page load
+  textarea.style.height = 'auto';
+  textarea.style.height = textarea.scrollHeight + 'px';
+});
+
+function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto'; // Reset height
+    textarea.style.height = textarea.scrollHeight + 'px'; // Set height to fit content
+}
+
+function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const content = document.getElementById('content');
     sidebar.classList.toggle('collapsed');
     content.classList.toggle('collapsed');
-  }
-  function toggleDropdown(event) {
+}
+function toggleDropdown(event) {
     event.preventDefault();
     const dropdownContainer = event.target.closest('a').nextElementSibling;
     dropdownContainer.style.display = dropdownContainer.style.display === 'block' ? 'none' : 'block';
-  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var jobNameInput = document.getElementById('skill_chosen');
+    var generateSyllabusBtn = document.getElementById('generate_syllabus');
+
+    function toggleButton() {
+        if (jobNameInput.value.trim() === '') {
+            generateSyllabusBtn.disabled = true;
+        } else {
+            generateSyllabusBtn.disabled = false;
+        }
+    }
+
+    // Initial check
+    toggleButton();
+
+    // Add event listener for input changes
+    jobNameInput.addEventListener('input', toggleButton);
+});
+
   </script>
 
 </body>
