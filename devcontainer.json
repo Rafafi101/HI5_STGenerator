@@ -1,0 +1,20 @@
+{
+    "name": "PHP & MySQL",
+    "image": "mcr.microsoft.com/devcontainers/php:8.2",
+    "features": {
+        "ghcr.io/devcontainers/features/mysql:1": {
+            "version": "8.0",
+            "port": 3306
+        }
+    },
+    "forwardPorts": [3306, 8000],
+    "postCreateCommand": "php -S 0.0.0.0:8000 -t /workspace",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bmewburn.vscode-intelephense-client",
+                "xdebug.php-debug"
+            ]
+        }
+    }
+}
